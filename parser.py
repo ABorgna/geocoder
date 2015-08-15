@@ -12,35 +12,64 @@ OUT_JSON = "data.json"
 
 JSON_COLUMNS = ["listado","CODEM","socio","name","provincia","zona",
                 "localidad","direccion","direccion2","codigo postal",
-                "telefono","especialidad","email","encuestador"]
+                "telefono","telefono2","especialidad","email","encuestador"]
 
 def main():
-    # Get the data
-    data = getCsv(IN_CSV)
+    # Get the updated data
+    data = loadCsv(IN_CSV)
+
+    # Load the processed data, if any, and merge the address an position
+    oldData = loadJson(OUT_JSON)
+    for id,item in data.items():
+        if id in oldData and "lat" in oldData[id]:
+            item['lat'] = oldData[id]["address"]
+            item['lat'] = oldData[id]["lat"]
+            item['lng'] = oldData[id]["lng"]
 
     # Geocode all the points
-    for row in data:
-        row['address'] = ", ".join([ row[s].strip() for s in ["direccion","localidad","provincia"]]) \
+    for row in data.values():
+        # Trim all the spaces
+        for k,v in row.items():
+            if isinstance(v, str):
+                row[k] = v.strip()
+
+        # Ignore rows without the unique id
+        if not row['socio'].isdigit():
+            continue
+
+        # Format the address
+        row['address'] = ", ".join([row[s] for s in ["direccion","localidad","provincia"]]) \
                        + ", Argentina"
 
-        # The google api has a limit of 5 request per second
-        time.sleep(0.22)
+        # Don't override the coordinates
+        if 'lat' not in row:
+            # The google api has a limit of 5 request per second
+            time.sleep(0.22)
 
-        (lat,lng) = geocode(row["address"])
-        if lat is not None:
-            row['lat'] = lat
-            row['lng'] = lng
+            (lat,lng) = geocode(row["address"])
+            if lat is not None:
+                row['lat'] = lat
+                row['lng'] = lng
 
     # Write the json
-    writeJson(data,OUT_JSON)
+    writeJson(list(data.values()),OUT_JSON)
 
-# Parse the CSV data
-def getCsv(filename):
-    result = [];
+# Parse a CSV file
+def loadCsv(filename):
+    result = {};
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile, JSON_COLUMNS)
         for row in reader:
-            result.append(row)
+            result[row["socio"]] = row
+    return result
+
+# Parse a Json file
+def loadJson(filename):
+    result = {}
+    with open(filename) as jsonfile:
+        data = json.load(jsonfile)
+        for item in data:
+            result[item["socio"]] = item
     return result
 
 # Google geocoding
