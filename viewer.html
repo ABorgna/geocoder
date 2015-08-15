@@ -81,7 +81,7 @@ function showPoints() {
             var color = colors[0];
             var index = colorPos.indexOf(point.encuestador);
             if(index < 0) {
-                index = colorPos.push(point.encuestador);
+                index = colorPos.push(point.encuestador) - 1;
             }
             color = colors[index % colors.length];
 
@@ -95,8 +95,16 @@ function showPoints() {
                 infowindow.close();
                 infowindow.setContent(
                     point.name + "</br></br>" +
-                    point.address + "</br></br>" +
-                    "Encuestador: " + point.encuestador + "</br>");
+                    point.address + "</br>" +
+                    "Codigo postal: " + point['codigo postal'] + "</br>" +
+                    "</br>" +
+                    (point.encuestador ? "Encuestador: " + point.encuestador + "</br></br>" : "")+
+                    "CODEM: " + point.CODEM + "</br>" +
+                    "Numero de socio: " + point.socio + "</br>" +
+                    "email: " + point.email + "</br>" +
+                    "telefono: " + point.telefono + "</br>" +
+                    (point.telefono2 ? "telefono 2: " + point.telefono2 + "</br>" : "")
+                    );
                 infowindow.open(map,mark);
             }
         }(marker,points[i]));
