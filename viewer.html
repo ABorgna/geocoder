@@ -24,10 +24,14 @@ var infowindow;
 var points = [];
 var markers = [];
 
+var colors = ['blue','brown','darkgreen','green','orange','paleblue','pink',
+              'purple','red','yellow'];
+var colorPos = [];
+
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
-        center: {lat: -33.187791, lng:-63.004531},
-        zoom: 6
+        center: {lat: -34.639405, lng:-58.545210},
+        zoom: 9
     });
 
     infowindow = new google.maps.InfoWindow();
@@ -58,16 +62,31 @@ function showPoints() {
     for(var i=0; i<markers.length; i++) {
         google.maps.event.removeListener(markers[i].listener);
         markers[i].setMap(null);
+        colorPos = [];
     }
     markers = [];
 
     // Add a marker for every point
     for(var i=0; i<points.length; i++) {
+        var point = points[i];
+
         var marker = new google.maps.Marker({
-            position: {lat: points[i].lat, lng: points[i].lng},
+            position: {lat: point.lat, lng: point.lng},
             map: map,
-            title: points[i].name
+            title: point.name
         });
+
+        if(point.encuestador) {
+            var letter = point.encuestador[0].toUpperCase();
+            var color = colors[0];
+            var index = colorPos.indexOf(point.encuestador);
+            if(index < 0) {
+                index = colorPos.push(point.encuestador);
+            }
+            color = colors[index % colors.length];
+
+            marker.setIcon("markers/"+color+"_Marker"+letter+".png");
+        }
 
         // Show an info window on click
         // (we need a function factory to conserve the reference)
@@ -75,8 +94,9 @@ function showPoints() {
             return function(){
                 infowindow.close();
                 infowindow.setContent(
-                    point.name + "</br>" +
-                    point.address + "</br>");
+                    point.name + "</br></br>" +
+                    point.address + "</br></br>" +
+                    "Encuestador: " + point.encuestador + "</br>");
                 infowindow.open(map,mark);
             }
         }(marker,points[i]));
