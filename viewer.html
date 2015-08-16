@@ -61,8 +61,11 @@
             }
 
             #panel li > span:first-child {
-                padding-right: 8px;
-                font-size: 15px;
+                border-radius: 50%;
+                width: 12px;
+                height: 12px;
+                margin-right: 8px;
+                margin-top: 4px;
             }
 
             #panel li > span:nth-child(2) {
@@ -71,6 +74,11 @@
                 -webkit-flex: 1;
                 -ms-flex: 1;
                 flex: 1;
+
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding-right: 8px;
             }
 
             #map {
@@ -78,43 +86,43 @@
             }
 
             .blue {
-                color: #3B3BCB;
+                background-color: #3B3BCB;
             }
 
             .brown {
-                color: #A77245;
+                background-color: #A77245;
             }
 
             .darkgreen {
-                color: #1C8C1C;
+                background-color: #1C8C1C;
             }
 
             .green {
-                color: #8FEC57;
+                background-color: #8FEC57;
             }
 
             .orange {
-                color: orange;
+                background-color: orange;
             }
 
             .paleblue {
-                color: paleblue;
+                background-color: paleblue;
             }
 
             .pink {
-                color: pink;
+                background-color: pink;
             }
 
             .purple {
-                color: purple;
+                background-color: purple;
             }
 
             .red {
-                color: red;
+                background-color: red;
             }
 
             .yellow {
-                color: yellow;
+                background-color: yellow;
             }
 
         </style>
@@ -257,7 +265,7 @@ function updatePanel(){
         var color = colors[colorPos.indexOf(encuest) % colors.length];
 
         var elem = document.createElement('li');
-        elem.innerHTML = "<span class='"+color+"'>●</span>"
+        elem.innerHTML = "<span class='"+color+"'></span>"
                        + "<span>"+encuest+"</span><span>"+quant+"</span>";
 
         encuestList.appendChild(elem);
