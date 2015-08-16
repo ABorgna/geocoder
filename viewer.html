@@ -125,6 +125,10 @@
                 background-color: yellow;
             }
 
+            .markerred {
+                background-color: #E13E12;
+            }
+
         </style>
     </head>
     <body>
@@ -147,11 +151,11 @@ var markers = [];
 
 var colors = ['blue','brown','darkgreen','green','orange','paleblue','pink',
               'purple','red','yellow'];
-var colorPos = [];
 
-var encuestCount = {};
 var panel = document.getElementById('panel');
 var encuestList = document.getElementById('encuestadores');
+
+var encuestadores = {};
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -203,17 +207,17 @@ function showPoints() {
         });
 
         if(point.encuestador) {
-            var letter = point.encuestador[0].toUpperCase();
-            var color = colors[0];
-            var index = colorPos.indexOf(point.encuestador);
-            if(index < 0) {
-                index = colorPos.push(point.encuestador) - 1;
-                encuestCount[point.encuestador] = 0;
+            if(typeof encuestadores[point.encuestador] == 'undefined') {
+                encuestadores[point.encuestador] = {
+                    color: colors[Object.keys(encuestadores).length % colors.length],
+                    letter: point.encuestador[0].toUpperCase(),
+                    count: 0
+                };
             }
-            color = colors[index % colors.length];
-            encuestCount[point.encuestador]++;
+            var enc = encuestadores[point.encuestador];
+            enc['count']++;
 
-            marker.setIcon("markers/"+color+"_Marker"+letter+".png");
+            marker.setIcon("markers/"+enc['color']+"_Marker"+enc['letter']+".png");
         }
 
         // Show an info window on click
@@ -253,20 +257,32 @@ function updatePanel(){
 
     // Order the encuestadores
     var ordered = [];
-    for(var name in encuestCount) {
+    for(var name in encuestadores) {
         ordered.push(name);
     }
-    ordered.sort(function(a,b){return encuestCount[b] - encuestCount[a];});
+    ordered.sort(function(a,b){return encuestadores[b]['count'] - encuestadores[a]['count'];});
 
     // Add each line
+    var totalAssigned = 0;
     for(var i=0; i<ordered.length; i++){
-        var encuest = ordered[i];
-        var quant = encuestCount[encuest];
-        var color = colors[colorPos.indexOf(encuest) % colors.length];
+        var name = ordered[i];
+        var enc = encuestadores[name];
 
         var elem = document.createElement('li');
-        elem.innerHTML = "<span class='"+color+"'></span>"
-                       + "<span>"+encuest+"</span><span>"+quant+"</span>";
+        elem.innerHTML = "<span class='"+enc['color']+"'></span>"
+                       + "<span>"+name+"</span><span>"+enc['count']+"</span>";
+
+        encuestList.appendChild(elem);
+
+        totalAssigned += enc['count'];
+    }
+
+    // Add a line with the remaining points
+    var remaining = points.length - totalAssigned;
+    if(remaining > 0){
+        var elem = document.createElement('li');
+        elem.innerHTML = "<span class='markerred'></span>"
+                       + "<span>Sin asignar</span><span>"+remaining+"</span>";
 
         encuestList.appendChild(elem);
     }
