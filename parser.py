@@ -29,6 +29,11 @@ def main():
     # Ignore the rows with an invalid id
     data = dict((k,v) for k,v in data.items() if v['socio'].strip().isdigit());
 
+    # Do nothing if the new data file is empty
+    if not len(data):
+        print("The data file was empty!")
+        return 1
+
     # Geocode all the points
     for row in data.values():
         # Trim all the spaces
