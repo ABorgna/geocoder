@@ -18,8 +18,12 @@
                 position: absolute;
                 right: 50px;
                 top: 40px;
-                width: 300px;
                 z-index: 1;
+
+                width: 200px;
+                width: 20vw;
+                min-width: 200px;
+                max-width: 300px;
 
                 overflow: hidden;
 
@@ -144,7 +148,7 @@ var encuestList = document.getElementById('encuestadores');
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: -34.639405, lng:-58.545210},
-        zoom: 9
+        zoom: 12
     });
 
     infowindow = new google.maps.InfoWindow();
