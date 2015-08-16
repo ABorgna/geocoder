@@ -10,13 +10,13 @@ GOOGLE_API_KEY = "AIzaSyCxbKjzCtKgEx4JKXl7DNdWpXprXTc4AAY"
 IN_CSV = "data.csv"
 OUT_JSON = "data.json"
 
-JSON_COLUMNS = ["listado","CODEM","socio","name","provincia","zona",
+CSV_COLUMNS = ["listado","CODEM","socio","name","provincia","zona",
                 "localidad","direccion","direccion2","codigo postal",
                 "telefono","telefono2","especialidad","email","encuestador"]
 
 def main():
     # Get the updated data
-    data = loadCsv(IN_CSV)
+    data = loadCsv(IN_CSV, CSV_COLUMNS)
 
     # Load the processed data, if any, and merge the address an position
     oldData = loadJson(OUT_JSON)
@@ -26,16 +26,15 @@ def main():
             item['lat'] = oldData[id]["lat"]
             item['lng'] = oldData[id]["lng"]
 
+    # Ignore the rows with an invalid id
+    data = dict((k,v) for k,v in data.items() if v['socio'].strip().isdigit());
+
     # Geocode all the points
     for row in data.values():
         # Trim all the spaces
         for k,v in row.items():
             if isinstance(v, str):
                 row[k] = v.strip()
-
-        # Ignore rows without the unique id
-        if not row['socio'].isdigit():
-            continue
 
         # Format the address
         row['address'] = ", ".join([row[s] for s in ["direccion","localidad","provincia"]]) \
@@ -55,10 +54,10 @@ def main():
     writeJson(list(data.values()),OUT_JSON)
 
 # Parse a CSV file
-def loadCsv(filename):
+def loadCsv(filename,columns):
     result = {};
     with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile, JSON_COLUMNS)
+        reader = csv.DictReader(csvfile, columns)
         for row in reader:
             result[row["socio"]] = row
     return result
