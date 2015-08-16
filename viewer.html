@@ -147,7 +147,8 @@
 var map;
 var infowindow;
 var points = [];
-var markers = [];
+var markers = {};
+var updateInterval;
 
 var colors = ['blue','brown','darkgreen','green','orange','paleblue','pink',
               'purple','red','yellow'];
@@ -187,24 +188,32 @@ function getPoints() {
 function showPoints() {
     if(typeof map == "undefined") return;
 
-    // Delete the old markers
-    for(var i=0; i<markers.length; i++) {
-        google.maps.event.removeListener(markers[i].listener);
-        markers[i].setMap(null);
-        colorPos = [];
-        encuestCount = {};
+    var oldMarkers = markers;
+    markers = {};
+
+    // Reset assigned counts
+    for(var id in encuestadores){
+        encuestadores[id]['count'] = 0;
     }
-    markers = [];
 
     // Add a marker for every point
     for(var i=0; i<points.length; i++) {
         var point = points[i];
+        var marker;
 
-        var marker = new google.maps.Marker({
-            position: {lat: point.lat, lng: point.lng},
-            map: map,
-            title: point.name
-        });
+        if(typeof oldMarkers[point.socio] == 'undefined'){
+             marker = new google.maps.Marker({
+                position: {lat: point.lat, lng: point.lng},
+                map: map,
+                title: point.name
+            });
+        } else {
+            marker = oldMarkers[point.socio];
+            marker.setPosition({lat: point.lat, lng: point.lng});
+            marker.setTitle(point.name);
+            google.maps.event.removeListener(marker.listener);
+            delete oldMarkers[point.socio];
+        }
 
         if(point.encuestador) {
             if(typeof encuestadores[point.encuestador] == 'undefined') {
@@ -217,7 +226,16 @@ function showPoints() {
             var enc = encuestadores[point.encuestador];
             enc['count']++;
 
-            marker.setIcon("markers/"+enc['color']+"_Marker"+enc['letter']+".png");
+            var oldIcon = marker.getIcon();
+            var newIcon = "markers/"+enc['color']+"_Marker"+enc['letter']+".png";
+            if(oldIcon != newIcon){
+                marker.setIcon(newIcon);
+            }
+        } else {
+            // Set the default icon
+            if(marker.getIcon()){
+                marker.setIcon();
+            }
         }
 
         // Show an info window on click
@@ -241,8 +259,15 @@ function showPoints() {
             }
         }(marker,points[i]));
 
-        markers.push(marker);
+        markers[point.socio] = marker;
     }
+
+    // Delete the old markers that weren't in the new data
+    for(var id in oldMarkers) {
+        google.maps.event.removeListener(oldMarkers[id].listener);
+        oldMarkers[id].setMap(null);
+    }
+    oldMarkers = {};
 
     updatePanel();
 }
@@ -288,7 +313,17 @@ function updatePanel(){
     }
 }
 
+function scheduleGetPoints(){
+    // Call getPoints 5 seconds past every minute
+    var currentS = new Date().getSeconds();
+    setTimeout(function(){
+        updateInterval = setInterval(getPoints,60*1000);
+        getPoints();
+    },1000*(60-currentS+5));
+}
+
 getPoints();
+scheduleGetPoints();
 
         </script>
         <!-- This api key is set set to a specific url, so don't try to use it :) --!>
